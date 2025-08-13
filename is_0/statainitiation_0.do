@@ -2,12 +2,7 @@
 *	Evens Salies,  09/2018, 09/2019, 09/2020, 09/2021, 09/2024
 
 clear				all
-import 				excel "http://www.evens-salies.com/1999_Wine.xls", firstrow
-*	Note : avec l'option firstrow, Stata traite la premiere ligne du fichier
-*		Excel comme celle qui contient les noms des variables ; les autres 
-*		lignes sont traitees comme les observations et Stata convertit les
-*		virgules de la notation latine "," en virgules de la notation
-*		anglo-saxone "."
+import 			delimited "statainitiation_0_vin.csv", clear
 
 browse
 
@@ -18,7 +13,7 @@ describe
 summarize
 
 label variable		P "prix (FF/hl)"
-label variable		Q "quantité (hl)"
+label variable		Q "quantitÃ© (hl)"
 
 scatter				P Q
 
@@ -47,3 +42,4 @@ graph save 			"statainitiation_0_graphmatrix.gph", replace
 
 * Attention, pour la commande suivante le graphique .gph doit etre ouvert
 graph export 		"statainitiation_0_graphmatrix.png", replace
+
