@@ -19,6 +19,6 @@ Il y a deux valeurs abérantes dans le nuage $(p ; q)$ : observations 23 et 39. 
 
 Multiplier le prix mensuel $p$ par la quantité négociée $q$, appeler ce produit $R$, et calculer le coefficient de corrélation entre $R$ et $q$, vous obtiendrez un $\rho$ très proche de 1. J'ai pas mal réfléchi sur le fait d'avoir une demande $p(q)$ incompréhensible, alors que la recette $R(q)$ est pratiquement affine ! **À vos claviers !**.
 
-^1 : j'ai perdu le fichier Excel d'origine, créé par un étudiant en 2000, Laurent Cutzach. Laurent avait réalisé un mémoire sous ma co-direction avec Philippe Mahenc [^2]: ``Le marché des vins tranquilles à A.O.C. des Pyrénées Orientales'', dans lequel il estimait l'élasticité-prix de la demande des vins doux en région Occitanie (Languedoc-Roussillon à l'époque).
+[^1] : j'ai perdu le fichier Excel d'origine, créé par un étudiant en 2000, Laurent Cutzach. Laurent avait réalisé un mémoire sous ma co-direction avec Philippe Mahenc [^1] : ``Le marché des vins tranquilles à A.O.C. des Pyrénées Orientales'', dans lequel il estimait l'élasticité-prix de la demande des vins doux en région Occitanie (Languedoc-Roussillon à l'époque).
 
-^2 : [Philippe Mahenc](https://www.cee-m.fr/member/mahenc-philippe/), pour qui j'ai gardé beaucoup de respect, fut mon professeur de TD de théorie des jeux à la fin des années 1990, lorsque j'étais étudiant à l'Université de Sciences \'Economiques de Toulouse (Place Anatole France à l'époque).
+[^2] : [Philippe Mahenc](https://www.cee-m.fr/member/mahenc-philippe/), pour qui j'ai gardé beaucoup de respect, fut mon professeur de TD de théorie des jeux à la fin des années 1990, lorsque j'étais étudiant à l'Université de Sciences \'Economiques de Toulouse (Place Anatole France à l'époque).
