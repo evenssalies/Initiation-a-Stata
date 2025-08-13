@@ -22,3 +22,7 @@ Multiplier le prix mensuel $p$ par la quantité négociée $q$, appeler ce produ
 [^1]: j'ai perdu le fichier Excel d'origine, créé par un étudiant en 2000, Laurent Cutzach. Laurent avait réalisé un mémoire sous ma co-direction avec Philippe Mahenc [^2] : ``Le marché des vins tranquilles à A.O.C. des Pyrénées Orientales'', dans lequel il estimait l'élasticité-prix de la demande des vins doux en région Occitanie (Languedoc-Roussillon à l'époque).
 
 [^2]: [Philippe Mahenc](https://www.cee-m.fr/member/mahenc-philippe/), professeur à Montpellier, organisait les travaux dirigés de Théorie des jeux en Master (Maîtrise à l'époque) à la fin des années 1990 lorsque j'étais étudiant à l'Université de Sciences Economiques de Toulouse (Place Anatole France (les cours étaient donnés par [Michel Moreaux](https://www.tse-fr.eu/fr/michel-moreaux-1941-2021).
+
+## Note sur le graphe R vs Python
+
+Les résultats reflètent la proportion de recherches portant sur un mot clé donné dans une région et pour une période spécifiques, par rapport à la région où le taux d'utilisation de ce mot clé est le plus élevé (valeur de 100). Ainsi, une valeur de 50 signifie que le mot clé a été utilisé moitié moins souvent dans la région concernée, et une valeur de 0 signifie que les données pour ce mot clé sont insuffisantes.
