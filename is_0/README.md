@@ -2,7 +2,10 @@
 
 ### Source
 
-- Données issues des mercuriales (prix) mensuelles, de janvier 1995 à avril 1998.
+Données issues des mercuriales (prix) mensuelles, de janvier 1995 à avril 1998.
+
+### Description
+
 - Trois variables : sorties des chais des récoltants ($Q$), prix moyens pondérés (FF/hl) courants ($P$) et le produit ($R$). Le prix tient compte du degré-hecto (moyen) des quantités (hL) de vin __négocié__ (pour être franc, je ne me rappelle plus des règles de calcul).
 - Les vins dont des Côtes du Roussillon AOC, destinés à la commercialisation (vrac, bouteille), Blanc, Rouge et Rosé.
 - Les ventes sont négociées : tant d'hL se vend au prix p, avec généralement $q'>q\Leftrightarrow p'(q')<p(q)$.
