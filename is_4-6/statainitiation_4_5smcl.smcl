@@ -1,0 +1,828 @@
+{smcl}
+{com}{sf}{ul off}{txt}
+{com}. 
+. /***
+> 4. Spécification et Estimation
+> ==============================
+> 
+> Dans la __section 3__, nous nous sommes intéressés à l'estimation de la 
+> moyenne, ainsi que de l'erreur-type, dont les formules sont exactes. Il 
+> s'agissait d'estimations ponctuelles dans le cas univarié. Dans ce cas, il est 
+> assez intuitif détudier la précision de la statistique estimant le paramètre 
+> de la loi d'une variable, le paramètre de la superpopulation !
+> 
+> Quand les fonctions des variables sont plus compliquées, que les lois suivies 
+> par les statistiques ne sont connues, ni exactement, ni pour un $n$ donné, mais 
+> seulement asymptotiquement, ou que la supposition d'indépendance ne tient pas, 
+> on peut avoir recours à d'autres méthodes d'estimation avec Stata.
+> 
+> L'estimation dépend largement de la nature des variables (dichotomique, 
+> discrète, continue), et de la __spécification__ du modèle. Dans le cas multivarié, 
+> la spécification concerne la forme des relations entre les variables 
+> (log-linéaire, autorégressive, système d'équations, etc.). 
+> 
+> __[Discuter de la nature des variables]__
+> 
+> Nous verrons la spécification des modèles en mêeme temps que des méthodes 
+> d'estimation dans les sous-section qui suivent. On se place dans le cadre du 
+> modèle d'échantillonnage.
+> 
+> 4.1 Introduction
+> ----------------
+>  
+> L'estimation peut porter sur le paramètre d'une loi. La méthode du __maximum de 
+> vraissemblance__ (MV) est appropriée dans ce cas. On peut aussi estimer un 
+> paramètre sans être obligé de supposer une loi, avec, par exemple, la méthode 
+> des __moindres carrés__, inventée par Gauss-Legendre. 
+> 
+> Nous verrons des problèmes d'estimation ponctuelle dans le cas multivarié, et 
+> d'estimation par intervalle de confiance, notamment l'estimation bootstrap 
+> d'un paramètre, qui fonctionne dans les cas univarié et multivarié. Il y a 
+> aussi la méthode des moments, qui est disponible grâce à la commande __`gmm`__ 
+> où `gmm' est l'abréviation de _general method of moments_. Nous ferons un petit 
+> exercice, afin de donner une intuition de la méthode, que vous verrez plus 
+> amplement dans d'autres cours, notamment l'an prochain.
+> 
+> Nous ne verrons pas l'approche bayésienne de l'estimation d'un paramètre. Avec 
+> cette approche, on s'enfonce un peu plus dans l'estimation paramétrique, avec 
+> des hypothèses _a priori_ sur ces paramètres. Par exemple, $\mu$, le moment 
+> centré d'ordre un d'une variable normale de paramètres $\mu$ et $\sigma^2$, est 
+> lui-même borné entre $0$ et $1$ selon la loi $U[0,1]$. On peut facilement 
+> produire des valeurs pour ce type de variable avec Stata, en suivant la 
+> méthode Monte Carlo comme on l'a déjà vu. Vous pouvez consulter le __Stata 
+> Bayesian Analysis Reference Manual__ si vous étiez amené.e.s à faire du 
+> bayésien !
+> 
+> 4.2 Maximum de vraisemblance, __`ml`__
+> --------------------------------------
+> 
+> La commande __`ml`__ est puissante lorsqu'il s'agit d'obtenir un estimateur 
+> difficile à déduire à la main. La méthode consiste à trouver la forme de la 
+> statistique qui maximise une fonction des observations, la __fonction de 
+> vraisemblance__. La méthode est très efficace lorsque le modèle n'est pas 
+> linéaire par rapport aux paramètres. Un exemple emblématique est celui de 
+> la __loi logistique__. 
+> 
+> Considérons par exemple le cas d'une variable $Y$ dichotomique, qui suit non 
+> pas une loi de Bernoulli, mais une loi logistique à valeur dans $\{c -(}0,1\{c )-}$. Nous 
+> rentrons doucement dans le cadre multivarié, en supposant que $Pr(Y=1|X=x)$ est 
+> la fonction de répartition cumulée logistique : 
+> $$Pr(Y=1|X=x)=\frac{c -(}e^{c -(}\beta_1+\beta_2 x{c )-}{c )-}{c -(}1+e^{c -(}\beta1+\beta_2 x{c )-}{c )-}\equiv 
+> \Lambda(x,\mathbf{c -(}\beta{c )-}).$$
+> 
+> $\Lambda(x,\mathbf{c -(}\beta{c )-})$ ne comporte que deux paramètres, mais étant 
+> non-linéaire par rapport à ces derniers, les conditions de premier ordre sont 
+> compliquées. Comme on peut le voir, la probabilité que $Y$ se réalise est une 
+> fonction croissante de $x$ et tend vers 0 quand $x$ tend vers $-\infty$. Et, 
+> $ln(P/(1-P))=\beta_1+\beta_2 x$ est une fonction linéaire de 
+> $\mathbf{c -(}\beta{c )-}$. Le ratio $P/(1-P)$ s'appelle __ratio de chance__, et le 
+> logarithme (népérien) de ce ratio s'appelle __fonction logit__. Cette fonction 
+> intervient lors de la recherche de l'estimateur du MV.
+> 
+> Supposons un échantillon aléatoire. La loi jointe de $\mathbf{c -(}y{c )-}$ se note 
+> généralement $L(\mathbf{c -(}y{c )-}|\mathbf{c -(}\beta{c )-})$. L'écriture de la fonction de 
+> vraissemblance de léchantillon "renverse" le conditionnement, 
+> $L(\mathbf{c -(}\beta{c )-}|\mathbf{c -(}y{c )-})$ pour indiquer que c'est $\mathbf{c -(}\beta{c )-}$ qui 
+> varie, $\mathbf{c -(}y{c )-}$ est donné. Le problème est alors le suivant :
+> $$\hat{c -(}\mathbf{c -(}\beta{c )-}{c )-}=
+> argmax_{c -(}\mathbf{c -(}\beta{c )-}{c )-}\{c -(}L(\mathbf{c -(}\beta{c )-}|\mathbf{c -(}y{c )-}{c )-}\{c )-}.$$ Notons 
+> $Pr(Y_i=1|X_i=x_i)\equiv p_i(x_i)$. La vraissemblance s'écrit :
+>  $$L(\mathbf{c -(}\beta{c )-}|\mathbf{c -(}y{c )-}=
+>  \Pi_{c -(}i=1{c )-}^n p_i(x_i)^{c -(}y_i{c )-}(1-p_i(x_i))^{c -(}1-y_i{c )-}.$$
+>  
+> Faisons un petit détour par la loi de Bernoulli. Pour cela, supposons que $p_i$ 
+> ne varie pas avec $i$ ($\beta_1\equiv 0$ et $x_i\equiv 1\ \forall i$). Dans ce 
+> cas, on a $\Lambda(x,\mathbf{c -(}\beta{c )-})=e^{c -(}\beta_2{c )-}/(1+e^{c -(}\beta_2{c )-})\equiv p$. 
+> Notons que si je connais $\beta_2$, je connais $p$, est _vice-versa_. Que 
+> devient la vraissemblance dans ce cas ? 
+> 
+> Depuis Fisher, inventeur de la méthode, on s'intéresse à la log-vraissemblance, 
+> $ln(L(p|\mathbf{c -(}y{c )-}))$, que l'on note $l(p|\mathbf{c -(}y{c )-})$. Nous avons :
+>  $$l(p|\mathbf{c -(}y{c )-})=\sum_{c -(}i\le^n{c )-}(y_i ln(p)+(1-y_i)ln(1-p))$$
+>  $$=ln(p)n\bar{c -(}y{c )-}+ln(1-p)n(1-\bar{c -(}y{c )-}).$$ L'estimateur du MV est simple dans ce 
+>  cas : $\hat{c -(}p{c )-}=\bar{c -(}y{c )-}$.
+>  
+> On peut utiliser la commande __`ml`__, que l'on peut appliquer à l'estimation 
+> du paramètre d'une variable aléatoire qui suit une loi logistique, de Poisson, 
+> etc. On peut très bien utiliser la commande __`logit`__, mais aussi __`ml`__, 
+> ou encore utiliser __Mata__ pour aller encore plus dans les aspects techniques 
+> (nous avons fait un petit programme qui résout les équations non-linéaires 
+> induites par la maximisation de la vraisemblance).
+> ***/
+. 
+. cls
+{txt}
+{com}. clear   all
+{res}{txt}
+{com}. use             "http://www.stata-press.com/data/r13/repair", clear
+{txt}(1978 Automobile Data)
+
+{com}. 
+. * repair : niveau de reparation de la voiture
+. * foreign : est-ce que le vehicule est etranger
+. set more off
+{txt}
+{com}. 
+. * L'estimation du logit avec Y {c -(}0,1{c )-} et X {c -(}1,2,3{c )-}
+. keep            foreign repair
+{txt}
+{com}. 
+. * Option cell pour les frequences relatives
+. tabulate        foreign repair, cell
+{txt}
+{c TLC}{hline 17}{c TRC}
+{c |} Key{col 19}{c |}
+{c LT}{hline 17}{c RT}
+{c |}{space 4}{it:frequency}{col 19}{c |}
+{c |}{space 1}{it:cell percentage}{col 19}{c |}
+{c BLC}{hline 17}{c BRC}
+
+           {c |}              repair
+  Car type {c |}         1          2          3 {c |}     Total
+{hline 11}{c +}{hline 33}{c +}{hline 10}
+  Domestic {c |}{res}        10         27          9 {txt}{c |}{res}        46 
+           {txt}{c |}{res}     17.24      46.55      15.52 {txt}{c |}{res}     79.31 
+{txt}{hline 11}{c +}{hline 33}{c +}{hline 10}
+   Foreign {c |}{res}         0          3          9 {txt}{c |}{res}        12 
+           {txt}{c |}{res}      0.00       5.17      15.52 {txt}{c |}{res}     20.69 
+{txt}{hline 11}{c +}{hline 33}{c +}{hline 10}
+     Total {c |}{res}        10         30         18 {txt}{c |}{res}        58 
+           {txt}{c |}{res}     17.24      51.72      31.03 {txt}{c |}{res}    100.00 
+{txt}
+{com}. logit           foreign repair
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-29.569311}  
+Iteration 1:{space 2}Log likelihood = {res:-23.253386}  
+Iteration 2:{space 2}Log likelihood = {res:-22.346332}  
+Iteration 3:{space 2}Log likelihood = {res:-22.341067}  
+Iteration 4:{space 2}Log likelihood = {res:-22.341067}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:58}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:14.46}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0001}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.341067}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.2445}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}{col 14}{res}{space 2} 2.298023{col 26}{space 2} .7274809{col 37}{space 1}    3.16{col 46}{space 3}0.002{col 54}{space 4} .8721868{col 67}{space 3}  3.72386
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-6.871362{col 26}{space 2} 1.939831{col 37}{space 1}   -3.54{col 46}{space 3}0.000{col 54}{space 4}-10.67336{col 67}{space 3}-3.069364
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. logit           foreign repair, or
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-29.569311}  
+Iteration 1:{space 2}Log likelihood = {res:-23.253386}  
+Iteration 2:{space 2}Log likelihood = {res:-22.346332}  
+Iteration 3:{space 2}Log likelihood = {res:-22.341067}  
+Iteration 4:{space 2}Log likelihood = {res:-22.341067}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:58}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:14.46}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0001}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.341067}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.2445}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Odds ratio{col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}{col 14}{res}{space 2} 9.954486{col 26}{space 2} 7.241699{col 37}{space 1}    3.16{col 46}{space 3}0.002{col 54}{space 4} 2.392136{col 67}{space 3} 41.42397
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} .0010371{col 26}{space 2} .0020117{col 37}{space 1}   -3.54{col 46}{space 3}0.000{col 54}{space 4} .0000232{col 67}{space 3} .0464507
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: {bf:_cons} estimates baseline odds{txt}.{p_end}
+
+{com}. margins         , dydx(repair) at(repair==2)
+{res}
+{txt}{col 1}Conditional marginal effects{col 61}{lalign 13:Number of obs}{col 74} = {res}{ralign 2:58}
+{txt}{col 1}Model VCE: {res:OIM}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(foreign), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:repair}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 6:repair} = {res:{ralign 1:2}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}{col 14}{res}{space 2} .1941922{col 26}{space 2} .0598857{col 37}{space 1}    3.24{col 46}{space 3}0.001{col 54}{space 4} .0768184{col 67}{space 3}  .311566
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. * Probabilite d'un resultat positif
+. predict         FOREIGNP, pr
+{txt}
+{com}. sort            repair FOREIGNP
+{txt}
+{com}. 
+. /***
+> On peut reestimer le logit avec la troisieme valeur de la variable 
+> __`repair`__ en groupe de base
+> ***/
+. 
+. * baselevels affiche le grp de base
+. logit foreign ib3.repair, or baselevels
+
+{txt}note: {bf:1.repair} != 0 predicts failure perfectly;
+      {bf:1.repair} omitted and 10 obs not used.
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-26.992087}  
+Iteration 1:{space 2}Log likelihood = {res:-22.483187}  
+Iteration 2:{space 2}Log likelihood = {res:-22.230498}  
+Iteration 3:{space 2}Log likelihood = {res:-22.229139}  
+Iteration 4:{space 2}Log likelihood = {res:-22.229138}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:48}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:9.53}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0020}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.229138}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.1765}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Odds ratio{col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}
+{space 10}1  {c |}{col 14}{res}{space 2}        1{col 26}{txt}  (empty)
+{space 10}2  {c |}{col 14}{res}{space 2} .1111111{col 26}{space 2} .0855334{col 37}{space 1}   -2.85{col 46}{space 3}0.004{col 54}{space 4} .0245755{col 67}{space 3} .5023573
+{txt}{space 10}3  {c |}{col 14}{res}{space 2}        1{col 26}{txt}  (base)
+{space 12} {c |}
+{space 7}_cons {c |}{col 14}{res}{space 2}        1{col 26}{space 2} .4714045{col 37}{space 1}    0.00{col 46}{space 3}1.000{col 54}{space 4} .3969536{col 67}{space 3} 2.519186
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: {bf:_cons} estimates baseline odds{txt}.{p_end}
+
+{com}. 
+. * C'est equivalent a saturer le modele
+. tabulate repair, generate(repair_d)
+
+     {txt}repair {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+          1 {c |}{res}         10       17.24       17.24
+{txt}          2 {c |}{res}         30       51.72       68.97
+{txt}          3 {c |}{res}         18       31.03      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}         58      100.00
+{txt}
+{com}. 
+. * Option odd ratio
+. logit foreign repair_d1 repair_d2, or
+
+{txt}note: {bf:repair_d1} != 0 predicts failure perfectly;
+      {bf:repair_d1} omitted and 10 obs not used.
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-26.992087}  
+Iteration 1:{space 2}Log likelihood = {res:-22.483187}  
+Iteration 2:{space 2}Log likelihood = {res:-22.230498}  
+Iteration 3:{space 2}Log likelihood = {res:-22.229139}  
+Iteration 4:{space 2}Log likelihood = {res:-22.229138}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:48}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:9.53}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0020}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.229138}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.1765}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Odds ratio{col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 3}repair_d1 {c |}{col 14}{res}{space 2}        1{col 26}{txt}  (omitted)
+{space 3}repair_d2 {c |}{col 14}{res}{space 2} .1111111{col 26}{space 2} .0855334{col 37}{space 1}   -2.85{col 46}{space 3}0.004{col 54}{space 4} .0245755{col 67}{space 3} .5023573
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}        1{col 26}{space 2} .4714045{col 37}{space 1}    0.00{col 46}{space 3}1.000{col 54}{space 4} .3969536{col 67}{space 3} 2.519186
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: {bf:_cons} estimates baseline odds{txt}.{p_end}
+
+{com}. 
+. * La commande ml passe par l'execution d'un programme
+. program MYLOGIT
+{txt}  1{com}.  version 13
+{txt}  2{com}.  args lnf THETA
+{txt}  3{com}.  quietly: replace `lnf' = -ln(1+exp(-`THETA')) if $ML_y1==1
+{txt}  4{com}.  quietly: replace `lnf' = -`THETA' - ln(1+exp(-`THETA')) if $ML_y1==0
+{txt}  5{com}. end
+{txt}
+{com}. ml model lf MYLOGIT (foreign = repair)
+{res}{txt}
+{com}. ml maximize
+{res}
+{txt}Initial:{col 15}Log likelihood = {res:-40.202536}
+Alternative:{col 15}Log likelihood = {res:-33.496465}
+Rescale:{col 15}Log likelihood = {res:-30.169178}
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-30.169178}  
+Iteration 1:{space 2}Log likelihood = {res:-22.986181}  
+Iteration 2:{space 2}Log likelihood = {res:-22.349011}  
+Iteration 3:{space 2}Log likelihood = {res:-22.341073}  
+Iteration 4:{space 2}Log likelihood = {res:-22.341067}  
+Iteration 5:{space 2}Log likelihood = {res:-22.341067}  
+{res}
+{txt}{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:58}
+{txt}{col 57}{lalign 13:Wald chi2({res:1})}{col 70} = {res}{ralign 6:9.98}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.341067}{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0016}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}{col 14}{res}{space 2} 2.298023{col 26}{space 2} .7274809{col 37}{space 1}    3.16{col 46}{space 3}0.002{col 54}{space 4}  .872187{col 67}{space 3}  3.72386
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-6.871362{col 26}{space 2} 1.939831{col 37}{space 1}   -3.54{col 46}{space 3}0.000{col 54}{space 4}-10.67336{col 67}{space 3}-3.069364
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. 
+. /***
+> Nous allons maintenant résoudre le systeme de deux equations non-lineaires 
+> en $\beta_1$ et $\beta_2$ dans __Mata__.
+> ***/
+. 
+. clear   all
+{res}{txt}
+{com}. use             "http://www.stata-press.com/data/r13/repair", clear
+{txt}(1978 Automobile Data)
+
+{com}. set more off
+{txt}
+{com}. keep            foreign repair
+{txt}
+{com}. logit           foreign repair
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-29.569311}  
+Iteration 1:{space 2}Log likelihood = {res:-23.253386}  
+Iteration 2:{space 2}Log likelihood = {res:-22.346332}  
+Iteration 3:{space 2}Log likelihood = {res:-22.341067}  
+Iteration 4:{space 2}Log likelihood = {res:-22.341067}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:58}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:14.46}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0001}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-22.341067}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.2445}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}     foreign{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}repair {c |}{col 14}{res}{space 2} 2.298023{col 26}{space 2} .7274809{col 37}{space 1}    3.16{col 46}{space 3}0.002{col 54}{space 4} .8721868{col 67}{space 3}  3.72386
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-6.871362{col 26}{space 2} 1.939831{col 37}{space 1}   -3.54{col 46}{space 3}0.000{col 54}{space 4}-10.67336{col 67}{space 3}-3.069364
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. predict         FOREIGNP, pr
+{txt}
+{com}. 
+. table foreign FOREIGNP if repair==1, nototals //, cellwidth(10) in Stata 13
+{res}
+{smcl}
+{reset}{...}
+{hline 10}{c -}{c TT}{c -}{c -}{hline 11}
+{space 10} {c |}  Pr(foreign)
+{space 10} {c |}  {space 3}.0102179
+{hline 10}{c -}{c +}{c -}{c -}{hline 11}
+Car type{space 2} {c |}  {space 11}
+  Domestic {c |}  {space 9}{result:10}
+{hline 10}{c -}{c BT}{c -}{c -}{hline 11}
+
+{com}. table foreign FOREIGNP if repair==2, nototals
+{res}
+{smcl}
+{reset}{...}
+{hline 10}{c -}{c TT}{c -}{c -}{hline 11}
+{space 10} {c |}  Pr(foreign)
+{space 10} {c |}  {space 4}.093188
+{hline 10}{c -}{c +}{c -}{c -}{hline 11}
+Car type{space 2} {c |}  {space 11}
+  Domestic {c |}  {space 9}{result:27}
+  Foreign{space 1} {c |}  {space 10}{result:3}
+{hline 10}{c -}{c BT}{c -}{c -}{hline 11}
+
+{com}. table foreign FOREIGNP if repair==3, nototals
+{res}
+{smcl}
+{reset}{...}
+{hline 10}{c -}{c TT}{c -}{c -}{hline 11}
+{space 10} {c |}  Pr(foreign)
+{space 10} {c |}  {space 3}.5056766
+{hline 10}{c -}{c +}{c -}{c -}{hline 11}
+Car type{space 2} {c |}  {space 11}
+  Domestic {c |}  {space 10}{result:9}
+  Foreign{space 1} {c |}  {space 10}{result:9}
+{hline 10}{c -}{c BT}{c -}{c -}{hline 11}
+
+{com}. 
+. * MATA
+. mata:
+{txt}{hline 49} mata (type {cmd:end} to exit) {hline}
+{com}:  void function myfun2(real colvector x, real colvector values)
+>   {c -(}
+>   values[1] =   -10*exp(x[1]+x[2])/(1+exp(x[1]+x[2])) - ///
+>                                 30*exp(x[1]+2*x[2])/(1+exp(x[1]+2*x[2])) - ///
+>                                 18*exp(x[1]+3*x[2])/(1+exp(x[1]+3*x[2])) + 12 
+>   values[2] =   -10*exp(x[1]+x[2])/(1+exp(x[1]+x[2])) - ///
+>                                 60*exp(x[1]+2*x[2])/(1+exp(x[1]+2*x[2])) - ///
+>                                 54*exp(x[1]+3*x[2])/(1+exp(x[1]+3*x[2])) + 33 
+>   {c )-}
+
+:  S = solvenl_init()
+{res}
+{com}:  solvenl_init_evaluator(S, &myfun2())
+{res}
+{com}:  solvenl_init_type(S, "zero")
+{res}
+{com}:  solvenl_init_technique(S, "newton")
+{res}
+{com}:  solvenl_init_numeq(S, 2)
+{res}
+{com}:  solvenl_init_startingvals(S, J(2,1,0))
+{res}
+{com}:  solvenl_init_iter_log(S, "on")
+{res}
+{com}:  x = solvenl_solve(S)
+{res}{txt}Iteration 0:  Function ={res}      1130
+{txt}Iteration 1:{space 2}{txt}Function ={res} 28.394091{txt}  delta X ={res} 3.5076214
+{txt}Iteration 2:{space 2}{txt}Function ={res} 2.8026749{txt}  delta X ={res} .47183187
+{txt}Iteration 3:{space 2}{txt}Function ={res} .09205889{txt}  delta X ={res}  .1565965
+{txt}Iteration 4:{space 2}{txt}Function ={res} .00009591{txt}  delta X ={res} .02503346
+{txt}Iteration 5:{space 2}{txt}Function ={res} 8.894e-11{txt}  delta X ={res} .00074643
+
+{com}: x
+{res}       {txt}           1
+    {c TLC}{hline 16}{c TRC}
+  1 {c |}  {res}-6.871356767{txt}  {c |}
+  2 {c |}  {res} 2.298021399{txt}  {c |}
+    {c BLC}{hline 16}{c BRC}
+
+{com}: end
+{txt}{hline}
+
+{com}.  
+. /***
+> Notons que nous pourrions estimer le modèle Probit de la même manière, ainsi
+> que d'autres modèles à variable dépendante qualitative, tels que le modèle de 
+> Poisson, ou une généralisation de la fonction logistique, avec le modèle 
+> multinomial.
+>  
+> 4.2 Moindres carrés, __`regress`__
+> ----------------------------------
+> 
+> Dans le cas univarié, la méthode des moindres carrés (MC) permet de trouver une 
+> estimation du moment centré d'ordre 1 d'une variable qui minimise sa variance : 
+> $$\mu^{c -(}MC{c )-}\equiv argmin_{c -(}\mu{c )-}n^{c -(}-1{c )-}\sum_i(y_i-\mu)^2.$$ 
+> On la retrouve en économétrie où la moyenne est en fait l'espérance 
+> conditionnelle à une ou plusieurs autre variables, $\mu\equiv 
+> E(Y_i|X_1,X_2,\ldots,X_K)=\beta_1 X_1+\cdots\beta_K X_K.$
+> 
+> La commande __`regress`__ de __Stata__ gère ces deux situations sans problème. 
+> Dans le premier cas, il suffit de faire une régression de $Y$ sur une 
+> constante, en tapant tout simplement __`regress Y`__. Dans le second cas, une 
+> régression sur les différentes variables, par exemple $X_1$ et $X_2$ : 
+> __`regress Y X1 X2 ... X3`__
+> 
+> Les justifications de la méthode sont dans tous les livres d'économétrie, dont 
+> les deux plus fameux (Wooldridge, 2010, et Greene, 2014). Ses inconvénients 
+> sont aussi dans ces livres, ainsi que dans ceux sur l'__apprentissage 
+> automatique__. On peut sans difficulté utiliser __Stata__ pour calculer les 
+> coefficients d'un modèle en manipulant les matrices.
+> ***/
+. 
+. use     "http://www.evens-salies.com/rubin1977.dta", clear
+{txt}
+{com}. rename (GROUP POSY PREX)(D Y X)
+{res}{txt}
+{com}. regress Y D X
+
+{txt}      Source {c |}       SS           df       MS      Number of obs   ={res}        72
+{txt}{hline 13}{c +}{hline 34}   F(2, 69)        = {res}    21.59
+{txt}       Model {c |} {res} 318.806297         2  159.403149   {txt}Prob > F        ={res}    0.0000
+{txt}    Residual {c |} {res} 509.513147        69  7.38424851   {txt}R-squared       ={res}    0.3849
+{txt}{hline 13}{c +}{hline 34}   Adj R-squared   ={res}    0.3671
+{txt}       Total {c |} {res} 828.319444        71   11.666471   {txt}Root MSE        =   {res} 2.7174
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}           Y{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 11}D {c |}{col 14}{res}{space 2} 3.666846{col 26}{space 2}  .679734{col 37}{space 1}    5.39{col 46}{space 3}0.000{col 54}{space 4} 2.310813{col 67}{space 3} 5.022878
+{txt}{space 11}X {c |}{col 14}{res}{space 2} .7180273{col 26}{space 2} .1599805{col 37}{space 1}    4.49{col 46}{space 3}0.000{col 54}{space 4} .3988749{col 67}{space 3}  1.03718
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} 2.330691{col 26}{space 2}  1.01652{col 37}{space 1}    2.29{col 46}{space 3}0.025{col 54}{space 4} .3027893{col 67}{space 3} 4.358593
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. generate ONE=1
+{txt}
+{com}. mkmat ONE D X, matrix(X)
+{res}{txt}
+{com}. mkmat Y, matrix(Y)
+{res}{txt}
+{com}. matrix B=invsym(X'*X)*X'*Y
+{txt}
+{com}. matrix list B
+{res}
+{txt}B[3,1]
+             Y
+ONE {res} 2.3306913
+{txt}  D {res} 3.6668456
+{txt}  X {res}  .7180273
+{reset}
+{com}. 
+. /***
+> Dans le cas du modèle linéaire simple, il y a un lien fort avec le coefficient 
+> de corrélation de pearson, le fameux $\rho$. Les résultats de __`regress`__ne 
+> renvoient pas les coefficients de correlation de Spearman, tetrachorique (dans 
+> le cas de deux variables dichotomiques) car, par définition, la regression est 
+> pour des variables continues. La statistique $R^2$ affichée, après avoir 
+> exécuté la commande, est le coefficient de Pearson au carré.
+> 
+> 4.3 Estimation bootstrap, __`bootstrap`__
+> -----------------------------------------
+> 
+> Le bootstrap est au départ une méthode d'inférence. Avant de voir un exemple 
+> sur des données d'observation, examinons le cas simpliste d'un échantillon 
+> aléatoire ayant la même taille que la population, parce que la population est 
+> de petite taille par exemple ($N=3$, $n\equiv N$). Nous allons introduire la 
+> commande __`bootstrap`__ dans ce cas. Nous allons produire 1000 échantillons 
+> bootstrap, sachant très bien qu'il n'y en a que 10 échantillons distincts.
+>  
+> En effet, à partir de $\mathcal{c -(}S{c )-}=\{c -(}1,2,3\{c )-}$, on a les échantillons suivants : 
+> $\{c -(}1,1,1\{c )-}$, $\{c -(}2,2,2\{c )-}$, $\{c -(}3,3,3\{c )-}$, $\{c -(}1,1,2\{c )-}$, $\{c -(}2,2,1\{c )-}$, $\{c -(}1,1,3\{c )-}$, 
+> $\{c -(}3,3,1\{c )-}$, $\{c -(}2,2,3\{c )-}$, $\{c -(}3,3,2\{c )-}$, $\{c -(}1,2,3\{c )-}$. Supposons que les valeurs 
+> de la variable aléatoire soient $y_1=2$, $y_2=1$ et $y_3=3$. Il y a sept 
+> sommes, et donc sept moyennes différentes.
+> 
+> Ces 10 échantillons donnent les moyennes suivantes : $\frac{c -(}2+2+2{c )-}{c -(}3{c )-}=2$, 
+> $\frac{c -(}1+1+1{c )-}{c -(}3{c )-}=1$, $\ldots$, $\frac{c -(}2+2+3{c )-}{c -(}3{c )-}=7/3$ ou $\frac{c -(}3+3+1{c )-}{c -(}3{c )-}=7/3$, 
+> $\frac{c -(}3+3+2{c )-}{c -(}3{c )-}=8/3$. Vous pourrez vérifier qu'il y a sept moyennes 
+> différentes. Pour connaître la proportion de chaque moyenne, il faut revenir au 
+> nombre déchantillons possibles : $3^3=27$. Les différentes moyennes avec leur 
+> fréquence relative théorique entre parenthèses, sont les suivantes : 
+> $3/3=1 (1/27)$ (l'échantillon $\{c -(}2,2,2\{c )-}$), $4/3=1,33\ldots (3/27)$ (les 
+> échantillons $\{c -(}1,2,2\{c )-}$, $\{c -(}2,1,2\{c )-}$, $\{c -(}2,2,1\{c )-}$), $5/3=1,66\ldots (6/27)$ 
+> (les échantillons $\{c -(}1,1,2\{c )-}$, $\{c -(}1,2,1\{c )-}$, $\{c -(}2,1,1\{c )-}$, $\{c -(}2,2,3\{c )-}$, 
+> $\{c -(}2,3,2\{c )-}$, $\{c -(}3,2,2\{c )-}$), ..., $9/3=3 (1/27)$ (l'échantillon $\{c -(}3,3,3\{c )-}$).
+> 
+> Mais on peut aussi tout simplement ajouter les sept sommes différentes que 
+> nous avons trouvées, ce qui donne 42, puis diviser cette somme par 7 et par 3. 
+> Le résulat vaut 2.
+> 
+> ***/
+. 
+. set seed        21041971
+{txt}
+{com}. clear all
+{res}{txt}
+{com}. set     obs     3
+{txt}{p}
+Number of observations ({bf:_N}) was 0,
+now 3.
+{p_end}
+
+{com}. input int Y
+
+     {txt}       Y
+  1{com}. 2
+{txt}  2{com}. 1
+{txt}  3{com}. 3
+{txt}
+{com}. cls
+{txt}
+{com}. list
+{txt}
+     {c TLC}{hline 3}{c TRC}
+     {c |} {res}Y {txt}{c |}
+     {c LT}{hline 3}{c RT}
+  1. {c |} {res}2 {txt}{c |}
+  2. {c |} {res}1 {txt}{c |}
+  3. {c |} {res}3 {txt}{c |}
+     {c BLC}{hline 3}{c BRC}
+
+{com}. generate        MEAN=.
+{txt}(3 missing values generated)
+
+{com}. bootstrap       MEAN=r(mean), ///
+>  size(3) reps(1000) saving(bootstrap123, replace): summarize Y
+{res}{txt}(running {bf:summarize} on estimation sample)
+
+{p 0 9 2}
+warning: {bf:summarize} does not set {bf:e(sample)}, so no 
+observations will be excluded from the resampling because of 
+missing values or other reasons. To exclude observations, press 
+Break, save the data, drop any observations that are to be excluded, 
+and rerun {bf:bootstrap}.{p_end}
+{res}
+{text}Bootstrap replications ({result:1,000}){text}: {res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}10{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}20{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}30{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}40{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}50{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}60{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}70{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}80{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}90{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}100{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}110{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}120{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}130{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}140{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}150{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}160{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}170{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}180{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}190{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}200{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}210{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}220{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}230{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}240{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}250{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}260{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}270{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}280{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}290{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}300{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}310{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}320{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}330{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}340{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}350{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}360{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}370{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}380{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}390{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}400{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}410{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}420{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}430{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}440{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}450{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}460{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}470{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}480{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}490{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}500{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}510{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}520{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}530{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}540{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}550{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}560{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}570{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}580{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}590{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}600{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}610{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}620{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}630{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}640{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}650{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}660{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}670{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}680{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}690{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}700{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}710{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}720{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}730{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}740{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}750{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}760{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}770{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}780{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}790{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}800{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}810{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}820{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}830{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}840{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}850{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}860{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}870{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}880{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}890{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}900{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}910{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}920{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}930{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}940{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}950{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}960{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}970{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}980{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}990{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}1,000{text} done
+{res}
+{txt}{col 1}Bootstrap results{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3}
+{txt}{col 58}{lalign 13:Replications}{col 71} = {res}{ralign 5:1,000}
+{p2colset 7 16 20 2}{...}
+
+{txt}{p2col :Command:}{res:summarize Y}{p_end}
+{p2colset 10 16 20 2}{...}
+{p2col :MEAN:}{res:r(mean)}{p_end}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}   Observed{col 26}   Bootstrap{col 54}         Norm{col 67}al-based
+{col 14}{c |} coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 8}MEAN {c |}{col 14}{res}{space 2}        2{col 26}{space 2} .4735081{col 37}{space 1}    4.22{col 46}{space 3}0.000{col 54}{space 4} 1.071941{col 67}{space 3} 2.928059
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. 
+. * Look at the file content
+. use                     "C:\Users\evens\Documents\bootstrap123.dta", clear 
+{txt}(bootstrap: summarize)
+
+{com}. generate                ONE=1
+{txt}
+{com}. collapse (sum)  ONE, by(MEAN)
+{res}{txt}
+{com}. summarize               ONE
+
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 9}ONE {c |}{res}          7    142.8571    92.89497         29        267
+{txt}
+{com}. generate                ONEP=100*ONE/r(sum)
+{txt}
+{com}. browse
+{txt}
+{com}. 
+. /***
+> La commande __`bootstrap`__ a pour argument le nom de la variable dans laquelle 
+> on va mettre la statistique qui nous intéresse. Ici, c'est la variable 
+> __`MEAN`__. Cette variable contiendra une statistique post-commande, 
+> __`r(mean)`__ calculée par __`summarize`__.
+> 
+> Il y a 1000 TAR, et les 1000 moyennes sont placées dans le fichier de données 
+> __bootstrap123.dta__ dans votre dossier de travail. Après la commande 
+> __`bootstrap`__, le programme calcule la fréquence relative de chaque moyenne.
+>  
+> La commande calcule un intervalle de confiance bootstrap de la moyenne, à 
+> partir d'une erreur standard. La question est de savoir laquelle. 
+> 
+> Prenons un exemple de 23 capitalisations boursières dans le secteur mondial 
+> du numérique. Chacune des 23 capitalisations est la réalisation d'une variable 
+> aléatoire dont on ne connait pas la loi sous-jacente. Dans ce cas, le 
+> __bootstrap non-paramétrique__ peut être utilisé, en appliquant un 
+> re-échantillonnage basé sur toutes les observations. Si $n=23$ est la taille 
+> de l'échantillon, on crée un certains nombre d'échantillon bootstrap de $23$ 
+> observations chacun ; le nombre d'échantillons possibles (non-distincts) est 
+> $23^{c -(}23{c )-}$, c'est énorme !
+>  
+> Le programme suivant calcule l'intervalle de confiance de la moyenne des 
+> capitalisations. Nous allons nous contenter de tirer 100 échantillons. Vous 
+> pouvez ensuite essayer de voir quel est le résultat obtenu avec 500. Plutôt 
+> que de placer les fréquences relatives des différentes moyennes dans la feuille 
+> de données, on va faire un histogramme de ces moyennes avec la commande 
+> __`hist MEAN`__.
+> ***/
+. 
+. use     "http://www.evens-salies.com/statainitiation_3_capitalisation.dta", clear       
+{txt}
+{com}. rename          (var*)(CAP STR TEMP)
+{res}{txt}
+{com}. encode          TEMP, generate(NOM)
+{txt}
+{com}. drop            TEMP
+{txt}
+{com}. set seed        21041971
+{txt}
+{com}. bootstrap       MEAN=r(mean), size(23) reps(1000) ///
+>  saving(bootstrap_capitalisation, replace) nowarn mse: summarize CAP
+{res}{txt}(running {bf:summarize} on estimation sample)
+{res}
+{text}Bootstrap replications ({result:1,000}){text}: {res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}10{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}20{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}30{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}40{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}50{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}60{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}70{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}80{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}90{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}100{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}110{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}120{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}130{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}140{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}150{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}160{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}170{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}180{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}190{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}200{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}210{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}220{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}230{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}240{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}250{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}260{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}270{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}280{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}290{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}300{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}310{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}320{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}330{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}340{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}350{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}360{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}370{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}380{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}390{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}400{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}410{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}420{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}430{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}440{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}450{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}460{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}470{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}480{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}490{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}500{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}510{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}520{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}530{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}540{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}550{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}560{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}570{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}580{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}590{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}600{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}610{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}620{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}630{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}640{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}650{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}660{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}670{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}680{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}690{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}700{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}710{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}720{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}730{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}740{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}750{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}760{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}770{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}780{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}790{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}800{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}810{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}820{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}830{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}840{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}850{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}860{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}870{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}880{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}890{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}900{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}910{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}920{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}930{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}940{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}950{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}960{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}970{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}980{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}990{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}1,000{text} done
+{res}
+{txt}{col 1}Bootstrap results{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:23}
+{txt}{col 58}{lalign 13:Replications}{col 71} = {res}{ralign 5:1,000}
+{p2colset 7 16 20 2}{...}
+
+{txt}{p2col :Command:}{res:summarize CAP}{p_end}
+{p2colset 10 16 20 2}{...}
+{p2col :MEAN:}{res:r(mean)}{p_end}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}   Observed{col 26}   {help bootstrap_mse##|_new:Bstrap *}
+{col 14}{c |} coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 8}MEAN {c |}{col 14}{res}{space 2} 254.9565{col 26}{space 2} 61.54831{col 37}{space 1}    4.14{col 46}{space 3}0.000{col 54}{space 4} 134.3241{col 67}{space 3}  375.589
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. 
+. preserve
+{txt}
+{com}.  use            "bootstrap_capitalisation.dta", clear
+{txt}(bootstrap: summarize)
+
+{com}.  hist           MEAN
+{txt}(bin={res}29{txt}, start={res}88.173912{txt}, width={res}12.616192{txt})
+{res}{txt}
+{com}. restore
+{txt}
+{com}.  
+. /***
+> Nous n'avons pas utilisé l'information capturée par la variable de 
+> stratification. Si l'on pense que la moyenne varie d'une strate à l'autre, de 
+> sorte que $Y_{c -(}is{c )-}=\mu_s+U_i$ est le modèle pertinant, avec par exemple 
+> $U_i\sim i.i.d.$ (la valeur de $Y_{c -(}is{c )-}$ est déterminée par un PGD inconnu).
+> 
+> On peut combiner __`regress`__ avec l'option __`bootstrap`__ pour l'estimation 
+> de l'erreur-type du coefficient d'un modèle de régression. Dans l'exemple 
+> ci-dessous, le coefficient est unique, c'est la constante dans une modèle de 
+> régression (il n'y a pas de variable explicative autre que la constante). On 
+> sait que dans ce cas, l'estimateur de la constante est la capitalisation 
+> moyenne.
+> ***/
+. 
+. use     "http://www.evens-salies.com/statainitiation_3_capitalisation.dta", clear       
+{txt}
+{com}. rename                  (var*)(CAP STR TEMP)
+{res}{txt}
+{com}. encode                  TEMP, generate(NOM)
+{txt}
+{com}. drop                    TEMP
+{txt}
+{com}. order                   NOM
+{txt}
+{com}. sort                    NOM
+{txt}
+{com}. save                    "statainitiation_3_capitalisation_final.dta", replace
+{txt}{p 0 4 2}
+file {bf}
+statainitiation_3_capitalisation_final.dta{rm}
+saved
+{p_end}
+
+{com}. set seed                21041971
+{txt}
+{com}. 
+. regress                 CAP, vce(bootstrap)     // Dans ce cas, s.e. sert a construire IC
+{res}{txt}(running {bf:regress} on estimation sample)
+{res}
+{text}Bootstrap replications ({result:50}){text}: {res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}10{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}20{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}30{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}40{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}.{res}{text}50{text} done
+{res}
+{txt}{col 1}Linear regression{col 55}{lalign 13:Number of obs}{col 68} = {res}{ralign 8:23}
+{txt}{col 55}{lalign 13:Replications}{col 68} = {res}{ralign 8:50}
+{txt}{col 55}{lalign 13:{help j_robustsingular##|_new:Wald chi2(0)}}{col 68} = {res}{ralign 8:.}
+{txt}{col 55}{lalign 13:Prob > chi2}{col 68} = {res}{ralign 8:.}
+{txt}{col 55}{lalign 13:R-squared}{col 68} = {res}{ralign 8:0.0000}
+{txt}{col 55}{lalign 13:Adj R-squared}{col 68} = {res}{ralign 8:0.0000}
+{txt}{col 55}{lalign 13:Root MSE}{col 68} = {res}{ralign 8:299.8770}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}   Observed{col 26}   Bootstrap{col 54}         Norm{col 67}al-based
+{col 1}         CAP{col 14}{c |} coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_cons {c |}{col 14}{res}{space 2} 254.9565{col 26}{space 2} 62.11889{col 37}{space 1}    4.10{col 46}{space 3}0.000{col 54}{space 4} 133.2057{col 67}{space 3} 376.7073
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. 
+. matrix list     e(b)
+{res}
+{txt}symmetric e(b)[1,1]
+        _cons
+y1 {res} 254.95652
+{reset}
+{com}. matrix list     e(V)                    // S^2/23
+{res}
+{txt}symmetric e(V)[1,1]
+           _cons
+_cons {res} 3858.7563
+{reset}
+{com}. matrix define   B=J(1,1,0)
+{txt}
+{com}. matrix define   V=J(1,1,0)
+{txt}
+{com}. matrix define   B[1,1]=e(b)
+{txt}
+{com}. matrix define   V[1,1]=e(V)
+{txt}
+{com}. local                   B=B[1,1]
+{txt}
+{com}. local                   SE=V[1,1]^.5
+{txt}
+{com}. local                   ICL=`B'-invnormal(0.975)*`SE'
+{txt}
+{com}. di                              `ICL'
+{res}133.20574
+{txt}
+{com}. 
+. /***
+> On peut vérifier avec __`summarize`__ CAP que l'unique coefficient estimé est 
+> bien la moyenne de la variable. L'avantage de __`regress`__ est que nous avons 
+> au passage une estimation d'un intervalle de confiance pour la moyenne. Dans le 
+> cas d'un re-échantillonnage, l'estimateur bootstrap de l'erreur standard, qui 
+> vaut 62.11 dans mon cas, sert à calculer l'intervalle de confiance au seuil de
+> 5 %, comme on peut le vérifier : 
+> $$254.95\pm 1,96\times 62,11 \Leftrightarrow 254.95\pm 121,75 \Leftrightarrow
+>  [133,20 ; 376,70].$$
+>   
+> Vous verrez des méthodes plus compliquées cette année ou l'an prochain. Je 
+> pense par exemple à la méthode des moments généralisés, avec la commande 
+> __`gmm`__. Je vous conseille de revoir cette méthode dans le cas univarié, le 
+> cas "simple" par opposition à "généralisé" qui est le cadre dans lequel cette 
+> commande a été créée). 
+>  
+> Il y a un estimateur connu en économétrie qui s'appuie dessus. C'est celui 
+> d'Arellano et Bond, pour l'estimation des coefficients d'un modèle dynamique 
+> sur données de panel. Des informations sur l'application de la méthode dans le 
+> cas de petits échantillons sont disponibles dans Drukker (2010).
+> ***/
+. 
+. /***
+> Bibliographie
+> =============
+> 
+> Drukker, D.M. 2010. An introduction to GMM estimation using Stata (slides). 
+> In German Stata Users' Group.
+> ***/ 
+. 
+. quietly log close
+{smcl}
+{com}{sf}{ul off}

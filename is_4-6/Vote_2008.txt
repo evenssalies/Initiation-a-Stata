@@ -1,0 +1,8 @@
+"Le vote Aubry-Royal : une expérience aléatoire." ou "Quel seuil de signification pour la démocratie." ou "Statistiquement, Martine Aubry ne l'a pas remporté."
+
+Tel est le titre que nous pourrions donner à cette expérience grandeur nature. Le résultat de l’élection Royal-Aubry soulève le problème de la signification (statistique) d’une différence de voix entre deux candidats. Un enseignant en statistique est obligé d'admettre auprès de ses étudiants que 5% est LE seuil de signification acceptable pour tester une hypothèse en sciences sociales. Or, 42 voix sur plus de 137000 ne faisaient même pas 1 pour mille. 
+
+Comment la démocratie peut-elle reposer sur un système de vote où l’on fait comme si nous avions affaire à une expérience parfaitement contrôlée ? Quelles que soient les raisons de Mme Royal, elle-même et la commission qui s’est réunie en France pour faire recompter les bulletins auraient pu s’appuyer sur l’argument que 42 ou 102 voix d’écart n’ont aucune signification. Plutôt que de recompter, il fallait avoir le courage, soit de refaire le vote, soit d’admettre l’égalité, puis appliquer une autre règle.
+
+Que prévoit le code électoral dans le cas d’égalité ? Il existe la règle du « plus âgé » lorsqu’il s’agit d’élections de députés. Malheureusement pour Mme Royal, la règle politique, et non statistique, donnerait encore raison à Mme Aubry.
+

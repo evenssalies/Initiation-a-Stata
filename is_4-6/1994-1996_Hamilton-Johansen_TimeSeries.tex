@@ -1,0 +1,204 @@
+\documentclass{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsfonts}
+
+\begin{document}
+Nous utilisons ici une \'equation de coint\'egration statique
+seulement pour capturer la relation de long-terme, si elle existe
+entre nos variables, puis comparer les r\'esultats avec ceux
+d'\'equations comportant des retards dans certaines variables. La
+premi\`ere et n\'ecessaire \'etape avant d'estimer ces \'equations
+est de tester la non stationnarit\'e des s\'eries que nous avons
+pr\'esent\'ees. L'hypoth\`ese qui nous int\'eresse ici est
+essentiellement de savoir si certaines des variables incluses dans
+l'\'equation de demande poss\`edent une racine unitaire.
+\bigskip
+
+Nous avons utilis\'e les statistiques de tests augment\'es de Dickey
+et Fuller (1981) ou ADF et celles de Phillips et Perron (1988),
+d\'enot\'es plus bri\`evement PP, combin\'ees avec le crit\`ere
+d'information d'Akaike et Schwartz. Nous utilisons ce crit\`ere afin
+de d\'etecter le nombre de retards optimal pendant la proc\'edure de
+test. Pour chaque type de test, on s'int\'eresse \`a la valeur de
+$\rho$ et en particulier, \`a l'hypoth\`ese suivante
+$$\textrm{H}_0:\ \phi=1\ \Leftrightarrow \rho\equiv \phi-1=0,$$ dans
+les deux mod\`eles suivants
+\begin{equation}\Delta y_{it}=\mu+\beta t+\rho y_{it-1}+
+\sum_{j=1}^k\rho_j\Delta y_{it-j}+\epsilon_t,\quad
+t=1,2,\ldots,T,\end{equation} pour les tests ADF et le mod\`ele
+\begin{equation}\Delta y_{it}=\mu+\beta(t-T/2)+\rho y_{it-1}+
+\epsilon_t,\quad t=1,2,\ldots,T,\end{equation} dans le cadre des
+tests PP.
+
+Autrement dit, on veut savoir, avec un certain degr\'e de confiance
+que nous fixerons \`a l'avance, si $y_{it}$ poss\`ede une racine
+unitaire. L'hypoth\`ese alternative est $\textrm{H}_1:\ |\phi|<1$ ou
+$-2<\rho<0$.
+
+\'Evidemment, un test de non stationnarit\'e d'une s\'erie dans le
+cas univari\'e ne peut \^etre men\'e ind\'ependemment de nos a
+priori sur le vrai processus g\'en\'erateur de cette s\'erie. Aussi,
+l'insertion ou pas de composantes d\'eterministes dans le mod\`ele
+\`a estimer joue un r\^ole important. Par exemple la s\'erie du prix
+de d\'etail des non V.Q.P.R.D. transform\'ee $\Delta p_{D,t}$ peut
+tr\`es bien \^etre stationnaire autour d'une moyenne finie
+ind\'ependante du temps.
+
+Pour une s\'erie stationnaire ($|\phi|<1$) le comportement
+asymptotique de l'estimateur par les M.C.O. $\hat{\phi}$ de $\phi$
+est le m\^eme, qu'une constante soit pr\'esente ou pas dans le
+mod\`ele. Mais ce n'est pas vrai dans le cas o\`u $\phi=1$. Dans ce
+dernier cas, un test de $\phi=1$ n\'ecessite diff\'erentes tables
+apr\`es l'estimation de (1.13) selon le type de composantes
+d\'eterministes incluses dans la r\'egression (constante seule,
+constante avec tendance lin\'eaire, etc.). Par exemple, le mod\`ele
+sans constante devrait \^etre utilis\'e seulement si on sait que le
+processus g\'en\'erateur des donn\'ees (PGD) ne n\'ecessite pas de
+constante.
+
+Afin de mesurer l'importance de ce point, prenons le premier
+mod\`ele ci-dessus, (1.13) sans la tendance ($\beta\equiv 0$). Sous
+H0, de m\^eme que sous H1 la constante reste dans le mod\`ele. Si
+l'on r\'esoud l'\'equation par r\'ecurrence, on se rend compte que
+sous H0, la pr\'esence de la constante implique que $y_{it}$
+poss\`ede \`a la fois un trend stochastique et d\'eterministe.
+Ignorons le terme $\Delta y_{it-1}$ par souci de simplicit\'e. Si
+$\beta\equiv 0$ et une racine unitaire est pr\'esente dans la
+s\'erie, alors en effet $$y_{it}=y_{i0}+\mu
+t+\varepsilon_1+\cdots+\varepsilon_t.$$ En revanche, sous
+l'hypoth\`ese alternative (il n'y a pas de racine unitaire dans la
+s\'erie) $y_{it}$ s'\'ecrit comme la somme d'une constante et d'un
+processus lin\'eaire en $\varepsilon_t$. \'Etant donn\'e que sous H1
+le comportement asymptotique de l'estimateur par les M.C.O. de
+$\phi$ est le m\^eme, que la constante soit pr\'esente ou pas dans
+le mod\`ele, cela ne pose pas de probl\`eme. On dit que le test est
+invariant vis-\`a-vis de la moyenne sous le mod\`ele alternatif.
+
+L'id\'ee implicite est que les deux mod\`eles obtenus (celui sous H0
+et celui sous H1) soient deux mod\`eles alternatifs, tout aussi
+plausibles l'un que l'autre. C'est le cas par exemple si sous H0 la
+s\'erie en niveau poss\`ede une constante et une tendance
+stochastique, alors que sous H1, il s'agit d'un processus
+autor\'egressif avec constante et tendance lin\'eaire. Il appara\^\i
+t donc important d'avoir une sp\'ecification telle que dans
+(1.13)-(1.14), sous H0 seulement la tendance soit automatiquement
+\'elimin\'ee. La seconde id\'ee, plus statistique celle-ci est : il
+ne faut pas que sous l'hypoth\`ese nulle la statistique soit
+affect\'ee par la valeur de d\'epart $y_{i0}$ et par des
+param\`etres de nuisance tels que celui d'une constante inutile si
+les donn\'ees pour la s\'erie n'en contient pas.
+
+On utilise donc une formulation adopt\'ee dans Bhargava (1986),
+Fuller (1996, p. 567) et r\'ecemment Ayat et Burridge (2000). Afin
+d'employer cette formulation nous devons \'ecrire le mod\`ele
+suivant $$\begin{array}{cll} y_{it} & = &
+\tilde{\mu}+\tilde{\beta}t+v_t,\\ v_t & = & \phi
+v_{t-1}+\varepsilon_t\end{array},$$ ou $$y_{it}=\mu+\beta t+\phi
+y_{it-1}+\varepsilon_t,$$ avec
+$\mu\equiv(1-\phi)\tilde{\mu}+\phi\tilde{\beta}$, et
+$\beta\equiv\tilde{\beta}(1-\phi)$. Nous pouvons retirer $y_{it-1}$
+\`a chaque membre de l'\'equation et rajouter le terme de correction
+d'une \'eventuelle autocorr\'elation s\'erielle, de sorte que nous
+retrouvons (1.13) o\`u $\mu$ et $\beta$ sont d\'esormais fonction de
+param\`etres structurels. On remarque que dans l'approche de
+Phillips et Perron (1988), il n'y a pas le terme de correction
+$\sum_{j=1}^k\rho_j\Delta y_{it-j}$ mais, \`a la place, une
+correction semi-param\'etrique de la statistique de test de racine
+unitaire. De plus, la tendance est aussi corrig\'ee (ou
+``centr\'ee'' selon l'expression de Banerjee et \textit{alii},
+1993), autour de la valeur $T/2$.
+
+Concernant le coefficient du terme autor\'egressif, soit $\rho<0$,
+soit $\rho>0$. Dans chacun des cas nous devons mener un test
+unilateral. C'est l'ampleur, plus que le signe, de $\rho$ sous H0 et
+H1 qui importe. Dans le cas o\`u le test conduit \`a rejeter
+$\rho=0$, ou de mani\`ere \'equivalente, \`a rejeter $\phi=1$, parce
+qu'en r\'ealit\'e $|\phi|>1$, alors le rejet de l'hypoth\`ese nulle
+de non stationnarit\'e n'implique pas pour autant que la s\'erie est
+stationaire sous H1. La s\'erie est stationnaire sous H1 lorsque
+$|\phi|<1$\ i.e. $-2<\rho<0$. Si on adopte la position que le PGD
+est soit stationnaire soit I(1), mais non explosif, alors nous
+n'avons pas besoin de tenir compte des cas o\`u sous H1 $|\phi|$\
+serait strictement sup\'erieur \`a 1 i.e.
+$\rho\in(-\infty,-2]\cup(0,+\infty)$. Si, au contraire, on veut
+tenir compte d'un PGD explosif, alors on doit effectuer un test
+bilat\'eral (Hayashi, 2000, pp. 580-581). Notons que la pr\'esence
+d'une racine explosive va fortement d\'ependre de la structure de la
+partie d\'eterministe ins\'er\'ee dans la r\'egression.
+
+Il semble donc tr\`es important de poser clairement l'hypoth\`ese
+nulle (H0), celle que l'on pense \^etre la plus probable, et
+l'alternative (H1) associ\'ee aux diff\'erents mod\`eles ayant pu
+g\'en\'erer nos s\'eries. Dans chacun des cas, le non rejet de H0
+signifiera que la s\'erie poss\`ede une composante de tendance
+stochastique. La statistique servant \`a tester l'hypoth\`ese nulle
+est celle analogue au $t-$ de Student (on trouve au le nom de
+\textbf{pseudo-\textit{t}-- de Student}). Nous employons cette
+statistique car sa distribution ne d\'epend pas de la valeur
+initiale que prend la s\'erie dans l'\'echantillon. Dans un
+\'echantillon de petite taille comme le notre, la valeur initiale
+pourrait influencer le r\'esultat du test si on utilisait la
+statistique $T\rho$ (Dickey et Fuller, 1979). La statistique
+utilis\'ee ici est not\'ee de mani\`ere g\'en\'erique $\tau$. Un
+premier indice est rajout\'e, visant \`a informer sur le mod\`ele
+estim\'e. Un second indice peut \^etre pr\'esent afin de pr\'eciser
+que la statistique report\'ee est celle du $t-$ de Student pour la
+constante ou la tendance lin\'eaire. Soulignons que le mod\`ele sous
+H0 est celui suppos\'e avoir g\'en\'er\'e la s\'erie !
+
+L'ensemble des statistiques employ\'ees sont r\'esum\'ees
+ci-dessous. Nous les pr\'esentons dans le cadre des tests ADF avec
+une correction finale de l'autocorr\'elation s\'erielle d'ordre 1 :
+\begin{itemize} \item[(\textbf{M1})]{\textbf{r\'egression contenant
+la constante mais sans tendance lin\'eaire}}
+\item[($\tau_{\mu}$)] statistique pseudo $t-$ de $\rho$ dans
+(M1). On teste H0 : $\rho=0$ ($y_{it}$ suit une marche al\'eatoire
+sans d\'erive puisque si $\phi=1$, la constante est automatiquement
+\'elimin\'ee), contre H1 : $\rho\not=0$ i.e. $y_{it}$ suit un AR(1)
+avec constante. $$\begin{array}{clr}\Delta y_{it} & = \rho_1\Delta
+y_{it-1}+\varepsilon_t & (H0)\\ & = \mu+\rho y_{it-1}+\rho_1\Delta
+y_{it-1}+\varepsilon_t,\quad \rho\not=0\quad & (H1).\end{array}$$
+
+\item[($\tau_{\alpha\mu}$)] statistique $t-$ pour le coefficient
+de la constante dans (M1). Test bilat\'eral de H0 : $\mu=0$ contre
+H1 : $\mu\not=0$ ;
+
+\item[($F_1$)] statistique de Fisher de l'hypoth\`ese jointe
+H0 : $\rho=\mu=0$ dans (M1), i.e $y_{it}$ suit une marche
+al\'eatoire sans d\'erive, contre H1 : au moins un des deux
+coefficients est diff\'erent de z\'ero ;
+
+\item[(\textbf{M2})]{\textbf{r\'egression contenant la
+constante \underline{et} la tendance lin\'eaire}}
+\item[($\tau_{\tau}$)] statistique pseudo $t-$ de $\rho$ dans
+(M2). On teste H0 : $\rho=0$ ($y_{it}$ suit une marche al\'eatoire
+sans d\'erive puisque si $\phi=1$, la tendance est automatiquement
+\'elimin\'ees), contre H1 : $\rho\not=0$ i.e. $y_{it}$ suit un AR(1)
+avec tendance affine (constante plus tendance lin\'eaire).
+$$\begin{array}{clr}\Delta y_{it} & = \tilde{\beta}+\rho_1\Delta
+y_{it-1}+\varepsilon_t & (H0)\\ & = \mu+\beta t+\rho
+y_{it-1}+\rho_1\Delta y_{it-1}+\varepsilon_t,\quad \rho\not=0\quad &
+(H1).\end{array}$$
+
+\item[($\tau_{\beta\tau}$)]
+statistique $t-$ pour le coefficient de la tendance lin\'eaire dans
+(M2). Test bilat\'eral de H0 : $\beta=0$ contre H1 : $\beta\not=0$ ;
+
+\item[($F_3$)] statistique de Fisher de l'hypoth\`ese jointe
+H0 : $\rho=\beta=0$ dans (M2), i.e $y_{it}$ suit une marche
+al\'eatoire avec d\'erive, contre H1 : au moins un des deux
+coefficients est diff\'erent de z\'ero (par exemple, $y_{it}$ suit
+un AR(1) avec tendance, une marche al\'eatoire avec d\'erive, une
+marche al\'eatoire avec tendance quadratique).
+
+\item[($\tau_{\alpha\tau}$)]
+statistique $t-$ pour le coefficient de la constante dans (M2). Test
+bilat\'eral de H0 : $\mu=0$ contre H1 : $\mu\not=0$ ;
+
+\item[($F_2$)] statistique de Fisher de l'hypoth\`ese jointe
+H0 : $\rho=\mu=\beta=0$ dans (M2), i.e $y_{it}$ suit une marche
+al\'eatoire pure, contre H1 : au moins un des trois coefficients est
+diff\'erent de z\'ero.
+\end{itemize}
+
+\end{document}
